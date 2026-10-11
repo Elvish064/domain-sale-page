@@ -1,5 +1,5 @@
 export interface Env {
-  CONTACT_EMAIL: string;
+  CONTACT_EMAIL?: string;
   PREVIEW_DOMAIN?: string;
 }
 
@@ -17,9 +17,11 @@ export function escapeHtml(value: string): string {
   })[character]!);
 }
 
-export function renderPage(domain: string, email: string): string {
+export function renderPage(domain: string, email = ""): string {
   const name = escapeHtml(domain);
-  const banner = `https://ascii.rest/banner/${encodeURIComponent(domain)}.svg?tagline=This%20domain%20is%20for%20sale`;
+  const tagline = "This domain is for sale.";
+  email = email.trim();
+  const banner = `https://ascii.rest/banner/${encodeURIComponent(domain)}.svg`;
   const mailto = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`Domain inquiry: ${domain}`)}`;
   return `<!doctype html>
 <html lang="en">
@@ -38,7 +40,11 @@ export function renderPage(domain: string, email: string): string {
     .banner { position: relative; width: 100%; margin: 0; min-height: 160px; display: grid; align-items: center; }
     .fallback { grid-area: 1 / 1; padding: 24px 0; }
     h1 { font-size: clamp(28px, 6vw, 64px); font-weight: 500; letter-spacing: -.05em; margin: 0 0 20px; overflow-wrap: anywhere; }
-    .fallback p { margin: 0; color: #aaa; font-size: 13px; }
+    .tagline { margin: 24px auto 0; width: ${tagline.length}ch; max-width: 100%; color: #aaa; font-size: clamp(12px, 3vw, 14px); }
+    .typed { box-sizing: content-box; display: block; width: 100%; overflow: hidden; white-space: nowrap; text-align: left; border-right: 1px solid #aaa; animation: typing 1.8s steps(${tagline.length}, end) both, cursor 1s step-end infinite; }
+    @keyframes typing { from { width: 0; } to { width: 100%; } }
+    @keyframes cursor { 50% { border-color: transparent; } }
+    @media (prefers-reduced-motion: reduce) { .typed { animation: none; border-right: none; } }
     .banner img { grid-area: 1 / 1; position: relative; width: 100%; height: auto; display: block; background: #fff; filter: grayscale(1) invert(1); }
     [hidden] { display: none !important; }
     .contact { margin-top: 44px; padding-top: 24px; position: relative; }
@@ -53,10 +59,11 @@ export function renderPage(domain: string, email: string): string {
 <body>
   <main aria-label="Domain for sale">
     <div class="banner">
-      <div class="fallback" id="fallback"><h1>${name}</h1><p>This domain is for sale</p></div>
+      <div class="fallback" id="fallback"><h1>${name}</h1></div>
       <img id="banner" hidden src="${escapeHtml(banner)}" alt="${name} — This domain is for sale">
     </div>
-    <div class="contact"><span class="label">Contact to purchase</span><a href="${escapeHtml(mailto)}">${escapeHtml(email)}</a></div>
+    <p class="tagline" aria-label="${tagline}"><span class="typed" aria-hidden="true">${tagline}</span></p>
+    ${email ? `<div class="contact"><span class="label">Contact to purchase</span><a href="${escapeHtml(mailto)}">${escapeHtml(email)}</a></div>` : ""}
   </main>
   <script>
     const banner = document.getElementById('banner');

@@ -28,7 +28,7 @@ test("different domains render independent banners, titles, and mail subjects", 
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.ok(html.includes(`<title>${domain} — This domain is for sale</title>`));
-    assert.ok(html.includes(`https://ascii.rest/banner/${domain}.svg?tagline=This%20domain%20is%20for%20sale`));
+    assert.ok(html.includes(`https://ascii.rest/banner/${domain}.svg`));
     assert.ok(html.includes(`subject=Domain%20inquiry%3A%20${domain}`));
     assert.ok(!html.includes("fake.example"));
   }
@@ -48,4 +48,15 @@ test("HEAD has no body and other methods return 405", async () => {
   const post = worker.fetch(new Request("https://example.com/", { method: "POST" }), env);
   assert.equal(post.status, 405);
   assert.equal(post.headers.get("Allow"), "GET, HEAD");
+});
+
+
+test("missing contact variable still serves the sale page without a fake email", async () => {
+  const response = worker.fetch(new Request("https://example.com/"), {});
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.ok(html.includes("This domain is for sale."));
+  assert.ok(!html.includes("mailto:"));
+  assert.ok(!html.includes("undefined"));
+  assert.ok(!html.includes("sales@example.com"));
 });
